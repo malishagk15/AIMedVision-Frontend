@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biomedical Image Classifier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-image: url('background.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 5px;
+            background-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        label {
+            display: block;
+            text-align: left;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, button {
+            margin-bottom: 15px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .label-result {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Biomedical Image Classifier</h1>
+        <label for="modelSelect">Select Model:</label>
+        <select id="modelSelect">
+            <option value="model1">Colon Pathology</option>
+            <option value="model2">Chest X-Ray</option>
+        </select>
+        <input type="file" id="fileInput">
+        <button onclick="uploadImage()">Upload Image</button>
+        <div id="result" style="display: none;"></div>
+        <div id="labelResult" class="label-result" style="display: none;"></div>
+    </div>
+
+    <script>
+        function uploadImage() {
+            var fileInput = document.getElementById('fileInput');
+            var file = fileInput.files[0];
+            if (!file) {
+                alert('Please select an image.');
+                return;
+            }
+
+            var modelSelect = document.getElementById('modelSelect');
+            var selectedModel = modelSelect.options[modelSelect.selectedIndex].value;
+
+            var formData = new FormData();
+            formData.append('file', file);
+            formData.append('model', selectedModel);
+
+            fetch('http://127.0.0.1:5000/predict', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Received response:', data); // Log the response to the console
+                var resultDiv = document.getElementById('result');
+                var labelResultDiv = document.getElementById('labelResult');
+                if (data.error) {
+                    resultDiv.textContent = 'An error occurred: ' + data.error;
+                    resultDiv.style.color = 'red';
+                    labelResultDiv.style.display = 'none';
+                } else {
+                    resultDiv.textContent = 'Predicted class: ' + data.predicted_class;
+                    resultDiv.style.color = 'green';
+                    labelResultDiv.textContent = 'Predicted label: ' + data.predicted_label;
+                    labelResultDiv.style.display = 'block';
+                }
+                resultDiv.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
